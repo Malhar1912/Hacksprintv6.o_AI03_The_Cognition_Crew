@@ -1,72 +1,150 @@
-Here's a **literature review** for your project, *SkillSort: AI-Powered Resume Screening Platform*, which blends front-end interactivity with NLP-based back-end intelligence. The review is organized thematically to reflect the multidisciplinary nature of your system:
+# SkillSort AI - Visual Resume Screening Platform ✨
 
----
+**Find the perfect fit — faster, smarter.**
 
-## 📚 **Literature Review: AI-Powered Resume Screening Platforms**
+SkillSort AI is an intelligent platform designed to streamline the initial resume screening process. It helps recruiters and hiring managers quickly identify the most relevant candidates by analyzing semantic similarity between resumes and job descriptions using NLP techniques.
 
-### 1. **Automated Resume Screening and Recruitment Systems**
+## Overview 📝
 
-The shift from manual to automated resume screening has gained momentum over the last decade. Studies such as Kuncel et al. (2014) emphasize the efficiency and consistency of algorithmic decision-making over human judgment, particularly in the early stages of candidate screening. AI-based systems can rapidly filter large volumes of resumes, reducing time-to-hire and potential human biases (Black & van Esch, 2020).
+Manually screening hundreds of resumes is time-consuming and prone to bias. SkillSort AI automates this by:
 
-> **Key Insight**: AI tools not only scale hiring but also standardize the evaluation process, enhancing fairness and efficiency.
+1.  Allowing users to upload multiple candidate resumes and a job description.
+2.  Extracting text content from PDF and DOCX files.
+3.  Using advanced Sentence Transformer models to understand the *meaning* behind the text, not just keywords.
+4.  Calculating a semantic match score between each candidate and the job description.
+5.  (Optionally) Calculating a team fit score if team member resumes are provided.
+6.  Displaying a ranked list of candidates with clear scoring and verdict indicators.
 
----
+This allows users to focus their time on the most promising candidates first.
 
-### 2. **Natural Language Processing (NLP) in HR Tech**
+## Core Features (Implemented) 🚀
 
-NLP plays a central role in extracting and understanding information from resumes. Research by Jiang et al. (2018) explores named entity recognition (NER) and part-of-speech tagging to parse unstructured resumes. More advanced models like BERT and Sentence Transformers (Reimers & Gurevych, 2019) enable semantic understanding, allowing systems to compare job descriptions and candidate qualifications contextually.
+*   **Multi-File Upload:** Upload multiple candidate resumes (`.pdf`, `.docx`) simultaneously.
+*   **Job Description Upload:** Upload a single job description file (`.pdf`, `.docx`).
+*   **(Experimental) Team Upload:** Interface to upload team member resumes with names/occupations (team fit calculation requires further validation).
+*   **Text Extraction:** Automatically extracts text content using `pdfplumber` and `python-docx`.
+*   **Semantic Analysis:** Employs the `all-MiniLM-L6-v2` Sentence Transformer model to generate text embeddings.
+*   **Scoring:**
+    *   Calculates **Skill Match** score based on cosine similarity between candidate embedding and JD embedding.
+    *   Calculates (optional) **Team Fit** score based on average similarity to provided team members.
+    *   Computes a weighted **Composite Score**.
+*   **Database Storage:** Stores file metadata, extracted text, embeddings (serialized), and scores in an SQLite database.
+*   **Ranked Results View:** Displays candidates sorted by score, showing:
+    *   Candidate Name & Original Filename
+    *   Skill Match, Team Fit (if applicable), and Overall Scores with progress bars.
+    *   Inferred basic traits (keyword-based).
+    *   A simple verdict badge (e.g., "Excellent Fit", "Consider").
+*   **Web Interface:** Built with Flask, TailwindCSS (CDN), and Alpine.js (CDN).
 
-> **Key Insight**: Transformer-based models significantly improve matching accuracy by capturing contextual similarities beyond keyword overlap.
+## Tech Stack ⚙️
 
----
+*   **Backend:**
+    *   Python 3.x
+    *   Flask (Web Framework)
+    *   Flask-CORS
+    *   SQLite3 (Database)
+*   **NLP & AI:**
+    *   `sentence-transformers` (specifically `all-MiniLM-L6-v2`)
+    *   `spacy` (`en_core_web_sm` model for basic trait extraction)
+    *   `numpy`
+    *   `torch` (dependency for sentence-transformers)
+*   **File Parsing:**
+    *   `pdfplumber`
+    *   `python-docx`
+*   **Frontend:**
+    *   HTML5
+    *   TailwindCSS (via CDN)
+    *   Alpine.js (via CDN for dropdown interactivity)
 
-### 3. **Skill Extraction and Semantic Matching**
 
-Identifying and matching skills between job requirements and candidate profiles is a key challenge. Systems such as "SkillNER" (Spacy.io extension) and research like "ESCO Matching" (Boella et al., 2019) highlight techniques to extract structured skills and map them to job taxonomies. Semantic similarity measures like cosine similarity in embedding space are often used for this matching.
+## Setup and Installation 🛠️
 
-> **Key Insight**: Effective skill mapping requires domain-specific skill ontologies (e.g., ESCO, O*NET) and semantic representations of skills.
+1.  **Clone the repository:**
+    ```bash
+    git clone <your-repository-url>
+    cd skill-sort-ai
+    ```
 
----
+2.  **Create and activate a virtual environment (Recommended):**
+    ```bash
+    # Windows
+    python -m venv venv
+    .\venv\Scripts\activate
 
-### 4. **Scoring Mechanisms and Composite Metrics**
+    # macOS/Linux
+    python3 -m venv venv
+    source venv/bin/activate
+    ```
 
-Combining various aspects of a candidate—skill match, experience, inferred personality traits—into a unified score has been explored in multiple studies (e.g., Diaby et al., 2019). Weighted composite scoring allows recruiters to balance between different hiring priorities.
+3.  **Install Python dependencies:**
+    ```bash
+    pip install -r requirements.txt
+    ```
+    *Note: `sentence-transformers` often requires PyTorch. Installation might take some time.*
 
-> **Key Insight**: Composite scores provide a holistic view of candidate fit, but transparency and interpretability are essential for trust and compliance.
+4.  **Download spaCy language model:**
+    ```bash
+    python -m spacy download en_core_web_sm
+    ```
 
----
+5.  **Run the Flask application:**
+    ```bash
+    python app.py
+    ```
 
-### 5. **Front-End Visualization for Decision Support**
+6.  **Access the application:** Open your web browser and navigate to `http://127.0.0.1:5500` (or the address shown in the terminal).
 
-Visualization interfaces like the one in your project are essential for HR managers to interpret AI insights. According to Hearst (2009), interactive filtering and dynamic sorting greatly aid in usability. TailwindCSS and Alpine.js offer lightweight, responsive frameworks that support clean UX, which aligns with studies promoting clarity and interactivity in decision interfaces (Zhou & Kapoor, 2011).
+## Usage Guide 📖
 
-> **Key Insight**: Visual interfaces enhance decision-making when they are intuitive, customizable, and visually encode confidence or match levels.
+1.  Navigate to the **Upload Page** (`/`).
+2.  **Upload Candidate Resumes:** Click "Choose Files" under "Upload Candidate Resumes" and select one or more `.pdf` or `.docx` files. Optionally provide candidate names in the generated fields.
+3.  **Upload Job Description:** Click "Choose File" under "Upload Job Description" and select a single `.pdf` or `.docx` file.
+4.  **(Optional) Upload Team Resumes:** Click "Show" under "Upload Team Resumes", upload team member `.pdf` or `.docx` files, and fill in their names and occupations. *Note: Team fit calculation is basic.*
+5.  Click the **"Analyze Resumes"** button. Processing might take some time depending on the number and size of resumes and your machine's performance.
+6.  You will be redirected to the **Results Page** (`/results`).
+7.  View the ranked list of candidates. Use the **Sort By** dropdown to reorder the results.
 
----
+## Project Structure 📁
+Use code with caution.
+Markdown
+skill-sort-ai/
+├── app.py # Main Flask application logic and routes
+├── modules/
+│ ├── init.py
+│ ├── db_manager.py # Database interactions (SQLite)
+│ ├── file_parser.py # PDF/DOCX text extraction
+│ └── nlp_processor.py # NLP tasks (spaCy, SentenceTransformers, scoring)
+├── static/
+│ └── css/
+│ └── styles.css # Optional custom CSS
+│ └── js/ # Optional custom JS (not used in current version)
+├── templates/
+│ ├── index.html # Upload interface template
+│ └── results.html # Results display template (table view)
+├── uploads/ # Stores uploaded files (auto-created)
+│ ├── candidates/
+│ ├── jd/
+│ └── team/
+├── requirements.txt # Python dependencies
+├── database.db # SQLite database file (auto-created)
+└── README.md # This file
+## Future Improvements / Roadmap (Based on Prompt) 💡
 
-### 6. **Fairness, Transparency, and Ethical AI in Hiring**
+*   **Interactive Analytics:** Add charts/visualizations (e.g., score distribution, trait comparisons) back using Chart.js or Plotly.
+*   **Advanced Trait/Personality Profiling:** Implement more sophisticated trait extraction (e.g., Big Five) using NLP techniques or keyword mapping.
+*   **Natural Language Feedback:** Generate basic feedback or skill gap summaries for candidates.
+*   **Resume Quality Scoring:** Add metrics for formatting, clarity, keyword density, etc.
+*   **Skill Gap Heatmap:** Visually compare skills extracted from resumes against JD requirements.
+*   **Improved Team Fit:** Enhance team compatibility scoring and potentially add a team fit matrix visualization.
+*   **Asynchronous Processing:** Implement background tasks (e.g., using Celery) for handling large uploads without blocking the UI.
+*   **UI/UX Enhancements:** Improve visual design, responsiveness, and user feedback.
+*   **Error Handling:** Add more robust error handling throughout the application.
+*   **Export Functionality:** Implement the "Export PDF" feature.
 
-While AI can increase efficiency, concerns remain regarding fairness and bias. Raji et al. (2020) discuss the risk of embedding historical hiring biases into models. Tools like IBM's AI Fairness 360 have been developed to audit and mitigate such biases. Transparency in how scores are derived and decisions are made is crucial.
+## Contributing 🤝
 
-> **Key Insight**: Incorporating explainability (e.g., showing why a candidate was deemed a good fit) builds trust and supports ethical hiring practices.
+Contributions are welcome! Please feel free to submit a Pull Request or open an Issue.
 
----
+## License ⚖️
 
-### 7. **Emerging Trends: Personality Inference and Team Fit**
-
-Recent works explore psychometric profiling through text (e.g., Mairesse et al., 2007), aiming to infer personality traits that correlate with team fit. While promising, such approaches require careful validation to avoid pseudoscientific conclusions.
-
-> **Key Insight**: Trait inference must be used cautiously and validated against performance data; it's most useful as a supplementary signal, not a primary metric.
-
----
-
-## 📌 **Summary and Research Gaps**
-
-Your system addresses a critical industry need: efficient, fair, and insightful resume screening. Existing research supports each major module—NLP-based extraction, semantic matching, scoring, and visual analytics. However, key gaps remain:
-- Real-time validation of personality inferences.
-- Benchmarking skill match algorithms across industries.
-- Ensuring fairness and explainability of composite scores.
-
----
-
-Would you like references in IEEE, APA, or BibTeX format to go with this review? Also, do you want me to integrate this into a report format or research proposal structure?
+*(MIT License)*
