@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkillSort: Upload</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        /* Custom scrollbar for webkit browsers */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #2d3748; } /* gray-800 */
+        ::-webkit-scrollbar-thumb { background: #4a5568; border-radius: 4px; } /* gray-600 */
+        ::-webkit-scrollbar-thumb:hover { background: #718096; } /* gray-500 */
+        body { background-color: #1a202c; } /* gray-900 */
+        .file-input-label { transition: background-color 0.2s ease-in-out; }
+        .file-input-label:hover { background-color: #4a5568; } /* gray-600 */
+        [x-cloak] { display: none !important; }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-200 font-sans leading-normal tracking-normal">
+
+    <div class="container mx-auto p-8 max-w-4xl">
+
+        <header class="text-center mb-12">
+            <h1 class="text-4xl font-bold text-white mb-2">SkillSort: Resume Screening Dashboard</h1>
+            <p class="text-lg text-gray-400">Find the perfect fit — faster, smarter.</p>
+        </header>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="mb-6">
+                    {% for category, message in messages %}
+                        <div class="p-4 rounded {{ 'bg-red-500' if category == 'error' else 'bg-yellow-500' }} text-white">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <form action="{{ url_for('upload_files') }}" method="post" enctype="multipart/form-data" x-data="fileUploadForm()">
+
+            <!-- Candidate Resumes Section -->
+            <div class="bg-gray-800 rounded-lg shadow-md p-6 mb-8">
+                <h2 class="text-2xl font-semibold text-white mb-4">Upload Candidate Resumes</h2>
+                <div class="mb-4">
+                    <label for="candidate_resumes" class="file-input-label block w-full cursor-pointer bg-gray-700 text-white text-center py-3 px-4 rounded-md border border-gray-600">
+                        <span x-text="candidateFilesText()">Choose Files (.pdf, .docx)</span>
+                        <input id="candidate_resumes" name="candidate_resumes" type="file" class="hidden" multiple
+                               accept=".pdf,.docx" @change="updateCandidateFiles($event)">
+                    </label>
+                </div>
+                 <!-- Display selected candidate files and add name inputs -->
+                 <div x-show="candidateFiles.length > 0" class="space-y-3 mt-4 max-h-60 overflow-y-auto pr-2">
+                    <template x-for="(file, index) in candidateFiles" :key="index">
+                        <div class="flex items-center justify-between bg-gray-700 p-2 rounded">
+                           <div class="flex-grow mr-4">
+                                <span class="text-sm text-gray-300 block truncate" x-text="file.name"></span>
+                                <input type="text" :name="'candidate_name_' + index" placeholder="Enter Candidate Name (Optional)"
+                                       class="mt-1 block w-full bg-gray-600 border border-gray-500 rounded px-2 py-1 text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                       x-model="candidateNames[index]">
+                           </div>
+                            <button type="button" @click="removeCandidateFile(index)" class="text-red-400 hover:text-red-300 text-sm font-medium">Remove</button>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Job Description Section -->
+            <div class="bg-gray-800 rounded-lg shadow-md p-6 mb-8">
+                <h2 class="text-2xl font-semibold text-white mb-4">Upload Job Description</h2>
+                 <div class="mb-4">
+                    <label for="job_description" class="file-input-label block w-full cursor-pointer bg-gray-700 text-white text-center py-3 px-4 rounded-md border border-gray-600">
+                        <span x-text="jdFileText()">Choose File (.pdf, .docx)</span>
+                        <input id="job_description" name="job_description" type="file" class="hidden"
+                               accept=".pdf,.docx" @change="updateJdFile($event)">
+                    </label>
+                </div>
+                <div x-show="jdFile" class="mt-2 text-sm text-gray-400" x-text="jdFile ? jdFile.name : ''"></div>
+            </div>
+
+            <!-- Team Members Section (Optional) -->
+            <div class="bg-gray-800 rounded-lg shadow-md p-6 mb-8" x-data="{ showTeam: false }">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-semibold text-white">Upload Team Resumes (Optional)</h2>
+                    <button type="button" @click="showTeam = !showTeam" class="text-indigo-400 hover:text-indigo-300 text-sm">
+                        <span x-show="!showTeam">Show</span>
+                        <span x-show="showTeam">Hide</span>
+                    </button>
+                </div>
+
+                <div x-show="showTeam" x-cloak x-transition>
+                    <p class="text-sm text-gray-400 mb-4">Upload resumes of existing team members to calculate team fit scores.</p>
+                    <div class="mb-4">
+                        <label for="team_resumes" class="file-input-label block w-full cursor-pointer bg-gray-700 text-white text-center py-3 px-4 rounded-md border border-gray-600">
+                             <span x-text="teamFilesText()">Choose Files (.pdf, .docx)</span>
+                            <input id="team_resumes" name="team_resumes" type="file" class="hidden" multiple
+                                   accept=".pdf,.docx" @change="updateTeamFiles($event)">
+                        </label>
+                    </div>
+
+                    <!-- Display selected team files and add name/occupation inputs -->
+                    <div x-show="teamFiles.length > 0" class="space-y-3 mt-4 max-h-60 overflow-y-auto pr-2">
+                        <template x-for="(file, index) in teamFiles" :key="'team-'+index">
+                            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-gray-700 p-3 rounded space-y-2 sm:space-y-0">
+                                <span class="text-sm text-gray-300 truncate mr-4 flex-shrink-0" x-text="file.name" :title="file.name"></span>
+                                <div class="flex-grow flex flex-col sm:flex-row sm:space-x-2 w-full sm:w-auto">
+                                    <input type="text" :name="'team_member_name_' + index" placeholder="Team Member Name" required
+                                           class="block w-full sm:w-1/2 bg-gray-600 border border-gray-500 rounded px-2 py-1 text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-1 sm:mb-0"
+                                           x-model="teamMemberDetails[index].name">
+                                    <input type="text" :name="'team_member_occupation_' + index" placeholder="Occupation/Role" required
+                                           class="block w-full sm:w-1/2 bg-gray-600 border border-gray-500 rounded px-2 py-1 text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                            x-model="teamMemberDetails[index].occupation">
+                                </div>
+                                <button type="button" @click="removeTeamFile(index)" class="text-red-400 hover:text-red-300 text-sm font-medium self-end sm:self-center flex-shrink-0 ml-2">Remove</button>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="text-center">
+                <button type="submit"
+                        class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition duration-300 ease-in-out transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                        :disabled="!jdFile || candidateFiles.length === 0">
+                    Analyze Resumes
+                </button>
+            </div>
+
+        </form>
+    </div>
+
+    <script>
+        function fileUploadForm() {
+            return {
+                candidateFiles: [],
+                candidateNames: [], // To store names corresponding to files
+                jdFile: null,
+                teamFiles: [],
+                teamMemberDetails: [], // Array of objects {name: '', occupation: ''}
+
+                updateCandidateFiles(event) {
+                    const newFiles = Array.from(event.target.files);
+                    // Prevent duplicates if user selects the same file again
+                    const existingNames = this.candidateFiles.map(f => f.name + f.size);
+                    newFiles.forEach(file => {
+                        if (!existingNames.includes(file.name + file.size)) {
+                             this.candidateFiles.push(file);
+                             // Add a corresponding empty name entry
+                             this.candidateNames.push(file.name.split('.')[0].replace(/[^a-zA-Z\s]/g, ' ').trim()); // Pre-fill with filename basis
+                        }
+                    });
+                   this.syncFileInputs('candidate_resumes', this.candidateFiles);
+                },
+                removeCandidateFile(index) {
+                    this.candidateFiles.splice(index, 1);
+                    this.candidateNames.splice(index, 1); // Remove corresponding name
+                    this.syncFileInputs('candidate_resumes', this.candidateFiles);
+                },
+                 candidateFilesText() {
+                    if (this.candidateFiles.length === 0) return 'Choose Candidate Files (.pdf, .docx)';
+                    if (this.candidateFiles.length === 1) return '1 Candidate File Selected';
+                    return `${this.candidateFiles.length} Candidate Files Selected`;
+                },
+
+                updateJdFile(event) {
+                    this.jdFile = event.target.files[0] || null;
+                },
+                 jdFileText() {
+                    return this.jdFile ? this.jdFile.name : 'Choose Job Description File (.pdf, .docx)';
+                },
+
+                updateTeamFiles(event) {
+                    const newFiles = Array.from(event.target.files);
+                     const existingNames = this.teamFiles.map(f => f.name + f.size);
+                    newFiles.forEach(file => {
+                         if (!existingNames.includes(file.name + file.size)) {
+                            this.teamFiles.push(file);
+                            // Add corresponding empty detail entry
+                            this.teamMemberDetails.push({ name: '', occupation: '' });
+                        }
+                    });
+                   this.syncFileInputs('team_resumes', this.teamFiles);
+                },
+                removeTeamFile(index) {
+                    this.teamFiles.splice(index, 1);
+                    this.teamMemberDetails.splice(index, 1); // Remove corresponding details
+                    this.syncFileInputs('team_resumes', this.teamFiles);
+                },
+                teamFilesText() {
+                    if (this.teamFiles.length === 0) return 'Choose Team Files (.pdf, .docx)';
+                    if (this.teamFiles.length === 1) return '1 Team File Selected';
+                    return `${this.teamFiles.length} Team Files Selected`;
+                },
+
+                // Helper to keep the actual file input element in sync with the Alpine state
+                syncFileInputs(inputId, fileArray) {
+                    const fileInput = document.getElementById(inputId);
+                    if (fileInput) {
+                        const dataTransfer = new DataTransfer();
+                        fileArray.forEach(file => dataTransfer.items.add(file));
+                        fileInput.files = dataTransfer.files;
+                         // Trigger change event manually if needed by other listeners (usually not required)
+                        // fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                }
+            }
+        }
+    </script>
+
+</body>
+</html>

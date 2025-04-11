@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkillSort: Results</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN REMOVED -->
+    <!-- Keep Alpine.js for Sort Dropdown -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+     <style>
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #2d3748; } /* gray-800 */
+        ::-webkit-scrollbar-thumb { background: #4a5568; border-radius: 4px; } /* gray-600 */
+        ::-webkit-scrollbar-thumb:hover { background: #718096; } /* gray-500 */
+
+        /* General Styles */
+        body { background-color: #1a202c; } /* gray-900 */
+        .progress-bg { background-color: #4a5568; } /* gray-600 */
+        .progress-bar { transition: width 0.5s ease-in-out; }
+        [x-cloak] { display: none !important; }
+        /* Basic sticky header styling */
+        .sticky-header th {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .sticky-col {
+            position: sticky;
+            left: 0;
+            z-index: 1;
+        }
+         tbody tr:hover .sticky-col {
+            background-color: #374151; /* gray-700 */
+        }
+         .sticky-header .sticky-col {
+             z-index: 20;
+         }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-200 font-sans">
+
+    <!-- Removed x-data from here, only needed for dropdown now -->
+    <div class="container mx-auto p-6 lg:p-8">
+
+        <header class="mb-8">
+            <div class="flex flex-col md:flex-row justify-between items-center mb-4">
+                 <a href="{{ url_for('index') }}" class="text-indigo-400 hover:text-indigo-300 mb-2 md:mb-0">← Back to Upload</a>
+                 <h1 class="text-3xl font-bold text-white text-center md:text-left">SkillSort: Resume Screening Results</h1>
+                 <div><!-- Spacer --></div>
+            </div>
+            <p class="text-xl text-center md:text-left text-gray-400">Job Position: <span class="font-semibold text-gray-300">{{ job_title | default('N/A') }}</span></p>
+        </header>
+
+        <!-- Filters and Actions -->
+        <div class="bg-gray-800 rounded-lg shadow-md p-4 mb-6 flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0 md:space-x-4">
+            <div class="flex items-center space-x-2 sm:space-x-4 flex-wrap justify-center md:justify-start">
+                <span class="text-gray-400 hidden sm:inline">Filters:</span>
+                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Excellent Fit</span>
+                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Consider</span>
+                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">Upskill Needed</span>
+                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Not Ideal</span>
+            </div>
+            <div class="flex items-center space-x-4">
+                 <!-- Sort Dropdown (Still uses Alpine) -->
+                 <div class="relative" x-data="sortDropdown()"> 
+                     <button @click="open = !open" class="bg-gray-700 hover:bg-gray-600 text-gray-300 px-4 py-2 rounded-md text-sm inline-flex items-center">
+                         Sort By: <span x-text="currentSortText" class="ml-1 font-medium"></span>
+                         <svg class="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                     </button>
+                     <div x-show="open" @click.away="open = false" x-transition x-cloak
+                          class="absolute right-0 mt-2 w-48 bg-gray-700 rounded-md shadow-lg z-20 py-1 origin-top-right">
+                         <a href="{{ url_for('results', sort_by='composite_score', order='DESC') }}" @click="open = false" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-600">Score (High-Low)</a>
+                         <a href="{{ url_for('results', sort_by='composite_score', order='ASC') }}" @click="open = false" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-600">Score (Low-High)</a>
+                         <a href="{{ url_for('results', sort_by='name', order='ASC') }}" @click="open = false" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-600">Name (A-Z)</a>
+                         <a href="{{ url_for('results', sort_by='name', order='DESC') }}" @click="open = false" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-600">Name (Z-A)</a>
+                         <a href="{{ url_for('results', sort_by='upload_time', order='DESC') }}" @click="open = false" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-600">Date (Newest)</a>
+                         <a href="{{ url_for('results', sort_by='upload_time', order='ASC') }}" @click="open = false" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-600">Date (Oldest)</a>
+                     </div>
+                 </div>
+                 <!-- Export Button (Functionality not implemented) -->
+                 <button class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium disabled:opacity-50" {% if not candidates %}disabled{% endif %} title="Export functionality not implemented yet">
+                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline-block mr-1" viewBox="0 0 20 20" fill="currentColor"> <path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V8z" clip-rule="evenodd" /> </svg>
+                     Export PDF
+                 </button>
+            </div>
+        </div>
+
+        <!-- Candidate Ranking Table -->
+        <div class="bg-gray-800 rounded-lg shadow-md overflow-hidden">
+            <div class="overflow-x-auto relative">
+                <table class="min-w-full divide-y divide-gray-700">
+                     <thead class="bg-gray-750 sticky-header">
+                        <tr>
+                            <th scope="col" class="sticky-col px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider bg-gray-750">Candidate</th>
+                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Skill Match</th>
+                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Team Fit</th>
+                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Overall Score</th>
+                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Inferred Traits</th>
+                            <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">Verdict</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-gray-800 divide-y divide-gray-700">
+                        {% if candidates %}
+                            {% for candidate in candidates %}
+                            <tr class="hover:bg-gray-700 transition duration-150 ease-in-out group">
+                                <td class="sticky-col px-4 py-4 whitespace-nowrap bg-gray-800 group-hover:bg-gray-700">
+                                    <div class="flex items-center">
+                                        <div class="flex-shrink-0 h-10 w-10 bg-indigo-500 rounded-full flex items-center justify-center text-white font-bold">
+                                            {{ candidate.name[0].upper() if candidate.name else '?' }}
+                                        </div>
+                                        <div class="ml-4">
+                                            <div class="text-sm font-medium text-white">{{ candidate.name | default('N/A') }}</div>
+                                            <div class="text-xs text-gray-400 truncate" title="{{ candidate.original_filename }}">{{ candidate.original_filename | default('N/A') }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="text-sm text-gray-300 mr-2">{{ candidate.skill_match_score_display }}%</div>
+                                        <div class="w-20 h-2 bg-gray-600 rounded-full overflow-hidden">
+                                            <div class="h-full bg-blue-500 progress-bar" style="width: {{ candidate.skill_match_score_display }}%;"></div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-4 whitespace-nowrap">
+                                    {% if candidate.team_fit_score_display != 'N/A' %}
+                                        <div class="flex items-center">
+                                            <div class="text-sm text-gray-300 mr-2">{{ candidate.team_fit_score_display }}%</div>
+                                            <div class="w-20 h-2 bg-gray-600 rounded-full overflow-hidden">
+                                                <div class="h-full bg-purple-500 progress-bar" style="width: {{ candidate.team_fit_score_display }}%;"></div>
+                                            </div>
+                                        </div>
+                                    {% else %}
+                                        <span class="text-sm text-gray-500">N/A</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-4 py-4 whitespace-nowrap">
+                                     <div class="flex items-center">
+                                         <div class="text-sm font-semibold text-white mr-2">{{ candidate.composite_score_display }}%</div>
+                                         <div class="w-20 h-2 bg-gray-600 rounded-full overflow-hidden">
+                                             <div class="h-full bg-teal-500 progress-bar" style="width: {{ candidate.composite_score_display }}%;"></div>
+                                         </div>
+                                     </div>
+                                </td>
+                                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-400">
+                                    <div class="flex flex-wrap gap-1 max-w-xs">
+                                        {% for trait in (candidate.extracted_traits or [])[:4] %} {# Limit displayed traits #}
+                                            <span class="px-2 py-0.5 text-xs rounded bg-gray-700 text-gray-300">{{ trait }}</span>
+                                        {% else %}
+                                            {% if not candidate.extracted_traits %}<span>-</span>{% endif %}
+                                        {% endfor %}
+                                    </div>
+                                </td>
+                                <td class="px-4 py-4 whitespace-nowrap text-center">
+                                    <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {{ candidate.verdict_style | default('bg-gray-100 text-gray-800') }}">
+                                        {{ candidate.verdict_text | default('N/A') }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center py-10 text-gray-500">
+                                    No candidates processed yet. Go back and upload resumes.
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Charts Section REMOVED -->
+
+    </div> <!-- End container -->
+
+    <!-- JavaScript for Sort Dropdown -->
+    <script>
+        // Define the Alpine component just for the sort dropdown
+        function sortDropdown() {
+            return {
+                open: false,
+                currentSortText: 'Score (High-Low)', // Default or detect from URL
+                init() {
+                    // Determine sort text based on current URL params
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const sortBy = urlParams.get('sort_by') || 'composite_score';
+                    const order = urlParams.get('order') || 'DESC';
+
+                    if (sortBy === 'composite_score' && order === 'DESC') this.currentSortText = 'Score (High-Low)';
+                    else if (sortBy === 'composite_score' && order === 'ASC') this.currentSortText = 'Score (Low-High)';
+                    else if (sortBy === 'name' && order === 'ASC') this.currentSortText = 'Name (A-Z)';
+                    else if (sortBy === 'name' && order === 'DESC') this.currentSortText = 'Name (Z-A)';
+                    else if (sortBy === 'upload_time' && order === 'DESC') this.currentSortText = 'Date (Newest)';
+                    else if (sortBy === 'upload_time' && order === 'ASC') this.currentSortText = 'Date (Oldest)';
+                    else this.currentSortText = 'Score (High-Low)'; // Sensible default
+                }
+            }
+        }
+        // Note: Alpine will automatically initialize components defined with x-data
+    </script>
+
+</body>
+</html>
