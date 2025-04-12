@@ -20,7 +20,7 @@ def clean_text(text):
     """Basic text cleaning."""
     if not text:
         return ""
-    text = re.sub(r'\s+', ' ', text)  # Replace multiple whitespace with single space
+    text = re.sub(r'\s+', ' ', text)  
     text = text.strip()
     return text
 
@@ -31,7 +31,7 @@ def get_embedding(text):
     try:
         cleaned_text = clean_text(text)
         embedding = model.encode(cleaned_text, convert_to_tensor=True)
-        return embedding.cpu().numpy() # Return as numpy array
+        return embedding.cpu().numpy() 
     except Exception as e:
         print(f"Error generating embedding: {e}")
         return None
@@ -45,7 +45,7 @@ def calculate_similarity(embedding1, embedding2):
         emb1 = np.asarray(embedding1)
         emb2 = np.asarray(embedding2)
         # Use sentence-transformers util for cosine similarity
-        similarity_score = util.cos_sim(emb1, emb2).item() # Get scalar value
+        similarity_score = util.cos_sim(emb1, emb2).item() 
         # Ensure score is between 0 and 1 (or -1 and 1 depending on model, MiniLM is usually positive)
         # Clamp score to 0-1 range and convert to percentage * 100
         return max(0.0, min(1.0, similarity_score)) * 100
@@ -59,7 +59,7 @@ def extract_skills_and_traits(text):
         return {"skills": [], "traits": []}
 
     cleaned_text = clean_text(text)
-    doc = nlp(cleaned_text[:nlp.max_length]) # Limit text length if very long
+    doc = nlp(cleaned_text[:nlp.max_length]) 
 
     # Example: Basic Noun Phrase extraction (potential skills)
     # More sophisticated extraction would use NER, Matcher rules, etc.
@@ -110,7 +110,7 @@ def extract_skills_and_traits(text):
         "assessed", "metrics", "research", "investigate", "investigated", "critical thinking",
         "diagnose", "diagnosed"
     ],
-    # --- Added More Traits ---
+    
     "communication": [
         "communication", "communicate", "communicated", "verbal", "written", "present",
         "presented", "presentation", "report", "reported", "document", "documented",
@@ -146,7 +146,7 @@ def extract_skills_and_traits(text):
         "traits": list(set(found_traits))[:5] # Return top 5 unique traits
     }
 
-# --- Add Scoring Logic ---
+
 def calculate_composite_score(skill_match_score, team_fit_score=None, skill_weight=0.7):
     """
     Calculates a weighted composite score.
