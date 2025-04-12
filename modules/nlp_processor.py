@@ -66,15 +66,74 @@ def extract_skills_and_traits(text):
     skills = list(set([chunk.text.lower() for chunk in doc.noun_chunks if len(chunk.text.split()) <= 3]))
 
     # Example: Simple keyword matching for traits (very basic)
-    trait_keywords = {
-        "team player": ["team", "collaboration", "collaborative", "teamwork"],
-        "leader": ["lead", "leadership", "manage", "supervise", "direct"],
-        "detail-oriented": ["detail", "precise", "meticulous", "accurate"],
-        "creative": ["creative", "innovative", "design", "imagine"],
-        "adaptable": ["adapt", "flexible", "versatile"],
-        "independent": ["independent", "self-starter", "autonomous"],
-        "analytical": ["analyze", "analytical", "data", "logic", "problem-solving"]
-    }
+   trait_keywords = {
+    "team player": [
+        "team", "teamwork", "collaboration", "collaborate", "collaborated", "collaborative",
+        "group project", "pair programming", "contribute", "contributed", "worked with",
+        "cross-functional", "ensemble", "synergy", "joint effort", "shared responsibility",
+        "committee", "support", "supported"
+    ],
+    "leader": [
+        "lead", "leadership", "leader", "led", "manage", "managed", "manager", "supervise",
+        "supervised", "supervisor", "direct", "directed", "coordinate", "coordinated",
+        "orchestrated", "head", "headed", "spearheaded", "mentor", "mentored", "guidance",
+        "oversaw", "presided", "captain", "initiative" # Initiative often overlaps
+    ],
+    "detail-oriented": [
+        "detail", "details", "precise", "precision", "meticulous", "meticulously",
+        "accurate", "accuracy", "thorough", "thoroughness", "examine", "examined",
+        "scrutinize", "scrutinized", "proofread", "validate", "validated", "verify",
+        "verified", "quality assurance", "qa", "attention to detail", "systematic",
+        "organized" # Can overlap with leadership/planning
+    ],
+    "creative": [
+        "creative", "creativity", "innovative", "innovate", "innovated", "innovation",
+        "design", "designed", "designer", "imagine", "imagination", "conceptualize",
+        "conceptualized", "brainstorm", "brainstormed", "original", "inventive",
+        "resourceful", "artistic", "develop", "developed", "ideation", "generate ideas"
+    ],
+    "adaptable": [
+        "adapt", "adapted", "adaptable", "adaptability", "flexible", "flexibility",
+        "versatile", "versatility", "adjust", "adjusted", "dynamic environment",
+        "pivot", "pivoted", "learn quickly", "new technology", "varied tasks",
+        "resilient", "resilience", "open-minded", "handle change"
+    ],
+    "independent": [
+        "independent", "independently", "self-starter", "self-directed", "autonomous",
+        "autonomously", "initiative", "proactive", "self-motivated", "minimal supervision",
+        "drive", "driven", "work alone", "sole contributor"
+    ],
+    "analytical": [
+        "analyze", "analyzed", "analytical", "analysis", "data", "data-driven",
+        "logic", "logical", "problem-solving", "problem solver", "quantitative",
+        "reasoning", "interpret", "interpreted", "evaluate", "evaluated", "assess",
+        "assessed", "metrics", "research", "investigate", "investigated", "critical thinking",
+        "diagnose", "diagnosed"
+    ],
+    # --- Added More Traits ---
+    "communication": [
+        "communication", "communicate", "communicated", "verbal", "written", "present",
+        "presented", "presentation", "report", "reported", "document", "documented",
+        "liaise", "liaised", "negotiate", "negotiated", "articulate", "articulated",
+        "interpersonal", "briefing", "correspondence", "explain", "explained"
+    ],
+    "problem solving": [ # Added as distinct from analytical, though overlap exists
+        "problem solving", "solve", "solved", "resolution", "resolve", "resolved",
+        "troubleshoot", "troubleshooting", "debug", "debugged", "fix", "fixed",
+        "issue", "challenge", "obstacle", "solution", "remedy", "diagnose", "diagnosed",
+        "root cause"
+     ],
+     "organized": [ # Can overlap with detail-oriented and leader
+         "organize", "organized", "organization", "plan", "planned", "planning",
+         "structure", "structured", "schedule", "scheduled", "coordinate", "coordinated",
+         "systematic", "methodical", "time management", "prioritize", "prioritized"
+     ],
+     "customer-focused": [ # If relevant for the role
+        "customer", "client", "user", "user-centric", "customer service", "customer support",
+        "client relationship", "user experience", "ux", "customer satisfaction", "client-facing",
+        "feedback", "support"
+     ]
+}
     found_traits = []
     text_lower = cleaned_text.lower()
     for trait, keywords in trait_keywords.items():
